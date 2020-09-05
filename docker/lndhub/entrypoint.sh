@@ -3,10 +3,10 @@ set -e
 
 # Assuming arguments for lndhub
 if [ $(echo "$1" | cut -c1) = "-" ]; then
-  exec "node /lndhub/index.js $@"
+  exec "npm start --prefix /lndhub $@"
 else
   # lndhub standard launch with or without params
-  if [ "$1" = "node /lndhub/index.js" ]; then
+  if [ "$1" = "npm start --prefix /lndhub" ]; then
     exec "$@"
   else
     # Custom launch
