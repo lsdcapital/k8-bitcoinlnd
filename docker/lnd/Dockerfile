@@ -23,7 +23,7 @@ ENV DEPENDENCIES ""
 
 # Create lnd user + group
 RUN addgroup ${LND_GROUP} && \
-    adduser -D -G ${LND_GROUP} lnd
+    adduser -D -G ${LND_GROUP} ${LND_USER}
 
 # Install dependencies
 RUN apk add --no-cache --virtual /tmp/.build-deps \
