@@ -1,0 +1,31 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: rsync
+  name: rsync
+  namespace: stef
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rsync
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: rsync
+    spec:
+      containers:
+      - image: docker.io/centos:centos7
+        command: ['/usr/bin/sleep', '99999999']
+        name: rsync
+        volumeMounts:
+        - mountPath: /data
+          name: bitcoind
+      volumes:
+      - name: bitcoind
+        persistentVolumeClaim:
+          claimName: bitcoind

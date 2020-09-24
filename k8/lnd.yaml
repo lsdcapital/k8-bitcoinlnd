@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lnd-loadbalancer
+  labels:
+    app: lnd
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9735
+  selector:
+    app: lnd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lnd-clusterip
+  labels:
+    app: lnd
+spec:
+  ports:
+  - name: grpc
+    port: 10009
+    protocol: TCP
+    targetPort: 10009
+  selector:
+    app: lnd
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  lnd.conf: |
+    # lnd configuration
+
+    [Application Options]
+    debuglevel=info
+    maxpendingchannels=4
+    alias=YOUR_ALIAS
+    color=#68F442
+    nat=false
+    # Avoid slow startup time
+    sync-freelist=1
+    # Avoid high startup overhead
+    stagger-initial-reconnect=1
+    # Allow push payments
+    accept-keysend=1
+    # Allow gift routes
+    allow-circular-route=1
+
+    listen=0.0.0.0:9735
+    rpclisten=0.0.0.0:10009
+    restlisten=127.0.0.1:8080
+    externalip=34.91.119.224
+    tlsextraip=192.168.120.170
+    tlsextradomain=lnd-clusterip
+    tlsextradomain=lnd-loadbalancer
+
+    [Bitcoin]
+    bitcoin.active=true
+    bitcoin.node=bitcoind
+    bitcoin.mainnet=true
+    # Set the channel confs to wait for channels
+    bitcoin.defaultchanconfs=2
+    bitcoin.minhtlc=1
+
+    [Bitcoind]
+    bitcoind.rpcuser=changeme
+    bitcoind.rpcpass=changeme
+    bitcoind.rpchost=bitcoin
+    bitcoind.zmqpubrawblock=tcp://bitcoin:28332
+    bitcoind.zmqpubrawtx=tcp://bitcoin:28333
+
+    [protocol]
+    # Enable large channels support
+    protocol.wumbo-channels=1
+
+    [wtclient]
+    wtclient.active=true
+kind: ConfigMap
+metadata:
+  name: lnd-config
+  namespace: stef
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lnd
+  namespace: stef
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: lnd
+  name: lnd
+  namespace: stef
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: lnd
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lnd
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - args:
+        - --lnddir=/data
+        - --datadir=/data/data
+        - --configfile=/etc/lnd/lnd.conf
+        image: lsdopen/lnd:0.11.0-beta
+        name: lnd
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - lncli unlock --stdin < /data/.walletpass
+        volumeMounts:
+        - mountPath: /data
+          name: lnd
+        - mountPath: /etc/lnd
+          name: lnd-config
+      volumes:
+      - name: lnd
+        persistentVolumeClaim:
+          claimName: lnd
+      - configMap:
+          defaultMode: 420
+          name: lnd-config
+        name: lnd-config

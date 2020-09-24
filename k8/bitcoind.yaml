@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bitcoin
+  name: bitcoin
+  namespace: stef
+spec:
+  ports:
+  - name: rpc
+    port: 8332
+    protocol: TCP
+    targetPort: 8332
+  - name: zmqblock
+    port: 28332
+    protocol: TCP
+    targetPort: 28332
+  - name: zmqtx
+    port: 28333
+    protocol: TCP
+    targetPort: 28333
+  selector:
+    app: bitcoind
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  bitcoin.conf: |
+    testnet=0
+    listen=0
+    server=1
+    txindex=1
+    disablewallet=0
+    dbcache=1024
+    maxorphantx=10
+    maxmempool=256
+    maxconnections=25
+    maxuploadtarget=5000
+
+    # Connection settings
+    rest=1
+    rpcauth=changeme:changeme
+    rpcbind=0.0.0.0
+    rpcport=8332
+    rpcallowip=192.168.0.0/16
+    zmqpubrawblock=tcp://0.0.0.0:28332
+    zmqpubrawtx=tcp://0.0.0.0:28333
+kind: ConfigMap
+metadata:
+  name: bitcoind-config
+  namespace: stef
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcoind
+  namespace: stef
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bitcoind
+  name: bitcoind
+  namespace: stef
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitcoind
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: bitcoind
+    spec:
+      containers:
+      - env:
+        - name: BITCOIN_DATA
+          value: /data/
+        # command: ['sleep']
+        # args: ['infinity']
+        args: ['-conf=/etc/bitcoin/bitcoin.conf', '-printtoconsole=0']
+        image: docker.io/lsdopen/bitcoin-core:0.20.1
+        name: bitcoin-core
+        volumeMounts:
+        - mountPath: /data
+          name: bitcoind
+        - mountPath: /etc/bitcoin
+          name: bitcoind-config
+      volumes:
+      - name: bitcoind
+        persistentVolumeClaim:
+          claimName: bitcoind
+      - configMap:
+          defaultMode: 420
+          name: bitcoind-config
+        name: bitcoind-config
