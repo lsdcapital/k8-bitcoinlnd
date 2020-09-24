@@ -20,7 +20,7 @@ Edit the bitcoind k8 yaml and define
 - rpcauth. See in the utils folder for a helper program
 
 
-LND
+# LND
 
 Edit the lnd k8 yaml and define
 - alias in the configmap
@@ -38,7 +38,7 @@ echo <password> > /data/.walletpass
 Need to ensure /data/data/chain/bitcoin/mainnet/channel.backup is backed up everytime a new channel is open / closed.
 TODO: Investigate https://api.lightning.community/#subscribechannelbackups to have a container listen, get updates and save it to bucket / s3 / pv
 
-LNDHUB
+# LNDHUB
 
 LndHub requires the following files to function
 /lndhub/config.js (provided via configmap)
