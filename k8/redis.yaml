@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: leader
-        image: "docker.io/redis:6.0.7"
+        image: "docker.io/redis:6.0.8"
         args: ['--appendonly yes']
         resources:
           requests:
