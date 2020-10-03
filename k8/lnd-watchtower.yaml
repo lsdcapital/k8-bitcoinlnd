@@ -105,7 +105,7 @@ spec:
               command:
               - /bin/sh
               - -c
-              - lncli unlock --stdin < /data/.walletpass
+              - sleep 60; lncli unlock --stdin < /data/.walletpass
         volumeMounts:
         - mountPath: /data
           name: watchtower
