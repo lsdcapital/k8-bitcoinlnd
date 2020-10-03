@@ -23,7 +23,7 @@ data:
 
     [Application Options]
     debuglevel=info
-    alias=lsdopen-watchtower
+    alias=YOUR_ALIAS
    
     listen=127.0.0.1:9735
     rpclisten=127.0.0.1:10009
@@ -97,7 +97,7 @@ spec:
         - --lnddir=/data
         - --datadir=/data/data
         - --configfile=/etc/lnd/lnd.conf
-        image: lsdopen/lnd:0.11.1-beta
+        image: lsdopen/lnd:v0.11.1-beta
         name: watchtower
         lifecycle:
           postStart:
