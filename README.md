@@ -1,4 +1,9 @@
-# k8-bitcoinlnd
+
+# Note
+
+This repo is archived in favour of the charts in the lsdcapital/helm-charts folder
+
+## k8-bitcoinlnd
 
 I started this repo as I wanted to run bitcoin-core, lnd, lndhub all on Kubernetes on GKE. Many of the docker containers I found on Dockerhub had some issue with moving the Kubernetes or didn't have the source Dockerfile available. I created these to hopefully be something that is useful and other can contribute to.
 
